@@ -111,8 +111,8 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_marginStart="8dp"
-                android:src="@drawable/ic_search"
-                app:tint="#6B7280" /> <!-- Replace with eye icon if available -->
+                android:src="@drawable/ic_eye"
+                app:tint="#6B7280" />
         </LinearLayout>
 
         <!-- Login Button -->

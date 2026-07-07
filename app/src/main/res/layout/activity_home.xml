@@ -120,10 +120,11 @@
                             android:layout_alignParentTop="true"
                             android:background="@drawable/bg_circle_red"
                             android:gravity="center"
-                            android:text="2"
+                            android:text="0"
                             android:textColor="#FFFFFF"
                             android:textSize="10sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:visibility="gone" />
                     </RelativeLayout>
                 </LinearLayout>
 
@@ -172,7 +173,8 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="16dp"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="36dp"
@@ -203,6 +205,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/tvActiveOrderInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="KNT-646335 · Meja 10"
@@ -264,7 +267,7 @@
         android:paddingHorizontal="20dp"
         android:paddingTop="12dp"
         android:paddingBottom="24dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <LinearLayout
             android:id="@+id/btnCart"
@@ -286,7 +289,7 @@
                 android:background="@drawable/bg_rounded_white_transparent"
                 android:paddingHorizontal="10dp"
                 android:paddingVertical="4dp"
-                android:text="2 item"
+                android:text="0 item"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />

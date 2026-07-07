@@ -105,6 +105,7 @@
                     app:tint="#6B7280" />
 
                 <TextView
+                    android:id="@+id/tvOrderSubtitleInfo"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"

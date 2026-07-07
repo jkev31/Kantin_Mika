@@ -71,6 +71,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvSuccessOrderId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="#ORD-042918"
@@ -112,6 +113,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvSuccessTableNum"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
@@ -121,93 +123,14 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Tenant Orders List (RecyclerView or dynamic views) -->
+        <!-- Tenant Orders List -->
         <LinearLayout
-            android:id="@+id/llTenantOrders"
+            android:id="@+id/llSuccessItems"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:orientation="vertical">
-
-            <!-- Sample Tenant Item -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_rounded_card_outline"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🍛"
-                        android:textSize="18sp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="Warung Pak Budi"
-                        android:textColor="#111827"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_chip_amber"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="4dp">
-
-                        <ImageView
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
-                            android:src="@drawable/ic_clock"
-                            app:tint="#D97706" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="10-15 mnt"
-                            android:textColor="#D97706"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Nasi Ayam Goreng ×2"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Rp 36.000"
-                        android:textColor="#111827"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </LinearLayout>
+            <!-- Items added programmatically -->
         </LinearLayout>
 
         <!-- Total Paid -->
@@ -231,9 +154,10 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvSuccessTotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rp 44.000"
+                android:text="Rp 0"
                 android:textColor="@color/primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />

@@ -76,15 +76,19 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_rounded_black_camera"
-        android:padding="24dp">
+        android:background="@drawable/bg_rounded_black_camera">
 
-        <!-- Inner White Frame -->
+        <androidx.camera.view.PreviewView
+            android:id="@+id/previewView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Inner White Frame Overlay -->
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@id/tvDetectedTable"
-            android:layout_marginBottom="16dp"
+            android:layout_margin="24dp"
             android:background="@drawable/bg_rounded_camera_frame" />
 
         <!-- Detected Table Text inside camera view -->
@@ -94,8 +98,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="8dp"
-            android:text="Meja 3 terdeteksi ✓"
+            android:layout_marginBottom="24dp"
+            android:text="Mengarahkan ke QR Code Meja..."
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="bold" />

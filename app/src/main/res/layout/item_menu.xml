@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_toStartOf="@id/btnAdd"
+            android:layout_toStartOf="@+id/containerQuantity"
             android:layout_marginEnd="8dp"
             android:orientation="vertical">
 
@@ -84,26 +84,75 @@
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <!-- Add Button (Plus Icon) -->
-        <LinearLayout
-            android:id="@+id/btnAdd"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+        <!-- Quantity Selector / Add Button -->
+        <FrameLayout
+            android:id="@+id/containerQuantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentEnd="true"
-            android:background="@drawable/bg_circle_primary"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center">
+            android:layout_alignParentEnd="true">
 
-            <TextView
+            <!-- Add Button (Initial State) -->
+            <LinearLayout
+                android:id="@+id/btnAdd"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_circle_primary"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Quantity Selector (Active State) -->
+            <LinearLayout
+                android:id="@+id/llQuantitySelector"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+                android:layout_height="28dp"
+                android:background="@drawable/bg_rounded_muted"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/btnMinus"
+                    android:layout_width="28dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="−"
+                    android:textColor="#111827"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvQuantity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="12dp"
+                    android:text="1"
+                    android:textColor="#111827"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnPlus"
+                    android:layout_width="28dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_circle_primary"
+                    android:gravity="center"
+                    android:text="+"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </FrameLayout>
     </RelativeLayout>
 
 </LinearLayout>
