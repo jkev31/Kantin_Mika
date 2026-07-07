@@ -55,7 +55,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_arrow_left"
-                            android:tint="#FFFFFF" />
+                            app:tint="#FFFFFF" />
                     </LinearLayout>
 
                     <!-- Cart Button (Top Right) -->
@@ -143,7 +143,7 @@
                             android:layout_width="12dp"
                             android:layout_height="12dp"
                             android:src="@drawable/ic_star"
-                            android:tint="#FBBF24" />
+                            app:tint="#FBBF24" />
 
                         <TextView
                             android:id="@+id/tvRating"
@@ -168,7 +168,7 @@
                             android:layout_width="12dp"
                             android:layout_height="12dp"
                             android:src="@drawable/ic_clock"
-                            android:tint="#D1D5DB" />
+                            app:tint="#D1D5DB" />
 
                         <TextView
                             android:id="@+id/tvTime"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -99,7 +100,7 @@
                     android:background="@drawable/bg_rounded_white_transparent"
                     android:padding="16dp"
                     android:src="@drawable/ic_user"
-                    android:tint="#FFFFFF" />
+                    app:tint="#FFFFFF" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -129,7 +130,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_chevron_right"
-                    android:tint="#B3FFFFFF" />
+                    app:tint="#B3FFFFFF" />
             </LinearLayout>
 
             <!-- Tenant Button -->
@@ -151,7 +152,7 @@
                     android:background="@drawable/bg_rounded_primary_light"
                     android:padding="16dp"
                     android:src="@drawable/ic_store"
-                    android:tint="@color/primary" />
+                    app:tint="@color/primary" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -181,7 +182,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_chevron_right"
-                    android:tint="#9CA3AF" />
+                    app:tint="#9CA3AF" />
             </LinearLayout>
         </LinearLayout>
 

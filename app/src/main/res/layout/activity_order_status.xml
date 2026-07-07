@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FCF6F0">
@@ -29,7 +30,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_arrow_left"
-                android:tint="#111827" />
+                app:tint="#111827" />
         </LinearLayout>
 
         <LinearLayout
@@ -101,7 +102,7 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_bell"
-                    android:tint="#6B7280" />
+                    app:tint="#6B7280" />
 
                 <TextView
                     android:layout_width="0dp"

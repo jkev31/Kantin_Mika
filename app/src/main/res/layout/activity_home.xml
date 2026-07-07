@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -57,7 +58,7 @@
                                 android:layout_width="12dp"
                                 android:layout_height="12dp"
                                 android:src="@drawable/ic_map_pin"
-                                android:tint="@color/text_secondary" />
+                                app:tint="@color/text_secondary" />
 
                             <TextView
                                 android:id="@+id/tvTableInfo"
@@ -107,7 +108,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:src="@drawable/ic_shopping_cart"
-                                android:tint="#FFFFFF" />
+                                app:tint="#FFFFFF" />
                         </LinearLayout>
 
                         <!-- Cart Badge -->
@@ -142,7 +143,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@drawable/ic_search"
-                        android:tint="#9CA3AF" />
+                        app:tint="#9CA3AF" />
 
                     <EditText
                         android:id="@+id/etSearch"
@@ -183,7 +184,7 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_package"
-                        android:tint="@color/primary" />
+                        app:tint="@color/primary" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -221,7 +222,7 @@
                     android:layout_height="16dp"
                     android:layout_marginStart="4dp"
                     android:src="@drawable/ic_chevron_right"
-                    android:tint="#9CA3AF" />
+                    app:tint="#9CA3AF" />
             </LinearLayout>
 
             <!-- Title: Pilih Tenant -->

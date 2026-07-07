@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="20dp"
     android:background="#F9FAFB">
@@ -27,7 +28,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:src="@drawable/ic_arrow_left"
-                android:tint="#111827" />
+                app:tint="#111827" />
         </LinearLayout>
 
         <LinearLayout
@@ -44,7 +45,7 @@
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:src="@drawable/ic_zap"
-                android:tint="@color/primary" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:layout_width="wrap_content"
