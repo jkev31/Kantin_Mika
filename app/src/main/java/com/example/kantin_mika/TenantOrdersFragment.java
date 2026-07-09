@@ -38,8 +38,8 @@ public class TenantOrdersFragment extends Fragment {
     private String currentFilter = "semua";
     private List<Order> orderList = new ArrayList<>();
     // Sesuaikan URL ini dengan API kamu
-    private String URL_GET_ORDERS = "http://192.168.101.4/pmob/api_uas/get_tenant_orders.php?id_tenant=";
-    private String URL_UPDATE_STATUS = "http://192.168.101.4/pmob/api_uas/update_order_status.php";
+    private String URL_GET_ORDERS = "http://192.168.1.5/pmob/api_uas/get_tenant_orders.php?id_tenant=";
+    private String URL_UPDATE_STATUS = "http://192.168.1.5/pmob/api_uas/update_order_status.php";
 
     @Nullable
     @Override
@@ -101,12 +101,14 @@ public class TenantOrdersFragment extends Fragment {
     private void renderFilteredList() {
         List<Order> filtered = new ArrayList<>();
         for (Order o : orderList) {
+            String status = o.status.toLowerCase();
             if (currentFilter.equals("semua")) {
                 filtered.add(o);
-            } else if (currentFilter.equals("diproses")
-                    && ("diproses".equalsIgnoreCase(o.status) || "proses".equalsIgnoreCase(o.status))) {
+            } else if (currentFilter.equals("baru") && (status.equals("baru") || status.equals("menunggu"))) {
                 filtered.add(o);
-            } else if (currentFilter.equals(o.status.toLowerCase())) {
+            } else if (currentFilter.equals("diproses") && (status.equals("diproses") || status.equals("proses"))) {
+                filtered.add(o);
+            } else if (currentFilter.equals("selesai") && status.equals("selesai")) {
                 filtered.add(o);
             }
         }
@@ -170,6 +172,8 @@ public class TenantOrdersFragment extends Fragment {
                 reader.close();
 
                 String responseStr = sb.toString();
+                android.util.Log.d("TENANT_ORDER_DEBUG", "Response: " + responseStr);
+
                 JSONArray arr;
                 if (responseStr.trim().startsWith("{")) {
                     JSONObject root = new JSONObject(responseStr);
@@ -185,12 +189,14 @@ public class TenantOrdersFragment extends Fragment {
 
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject obj = arr.getJSONObject(i);
+                    String status = obj.optString("status_pesanan", obj.optString("status", "Menunggu"));
+                    
                     Order order = new Order(
                             obj.optString("id_order", "N/A"),
                             obj.optString("nomor_meja", "-"),
                             obj.optInt("total_bayar", 0),
-                            obj.optString("status_pesanan", obj.optString("status", "baru")),
-                            obj.optString("waktu_order", "12.00")
+                            status,
+                            obj.optString("waktu_order", obj.optString("created_at", "12.00"))
                     );
 
                     if (obj.has("items")) {
@@ -198,21 +204,34 @@ public class TenantOrdersFragment extends Fragment {
                         if (itemsArr != null) {
                             for(int j=0; j<itemsArr.length(); j++) {
                                 JSONObject itemObj = itemsArr.getJSONObject(j);
-                                double subtotal = itemObj.optDouble("subtotal",
-                                        itemObj.optDouble("harga_satuan", 0) * itemObj.optInt("qty", 0));
+                                // Prefer subtotal from item, or calculate it
+                                double itemSubtotal = itemObj.optDouble("subtotal", 0);
+                                if (itemSubtotal == 0) {
+                                    itemSubtotal = itemObj.optDouble("harga_satuan", 0) * itemObj.optInt("qty", 0);
+                                }
+                                
                                 order.addItem(
                                         itemObj.optString("nama_menu", "Menu"),
                                         itemObj.optInt("qty", 0),
-                                        subtotal
+                                        itemSubtotal
                                 );
                             }
                         }
                     }
+                    
+                    // If total_bayar is 0 from API, calculate from items
+                    if (order.total == 0) {
+                        double calculatedTotal = 0;
+                        for (Double sub : order.itemSubtotals) calculatedTotal += sub;
+                        order.total = (int) calculatedTotal;
+                    }
+
                     orderList.add(order);
 
-                    if ("baru".equalsIgnoreCase(order.status)) baru++;
-                    else if ("diproses".equalsIgnoreCase(order.status) || "proses".equalsIgnoreCase(order.status)) proses++;
-                    else selesai++;
+                    String sLow = status.toLowerCase();
+                    if (sLow.equals("baru") || sLow.equals("menunggu")) baru++;
+                    else if (sLow.equals("diproses") || sLow.equals("proses")) proses++;
+                    else if (sLow.equals("selesai")) selesai++;
                 }
 
                 final int fBaru = baru, fProses = proses, fSelesai = selesai;
@@ -226,6 +245,10 @@ public class TenantOrdersFragment extends Fragment {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                if (isAdded() && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> 
+                        Toast.makeText(getContext(), "Gagal memuat pesanan: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                }
             }
         }).start();
     }
@@ -329,7 +352,7 @@ public class TenantOrdersFragment extends Fragment {
             }
             String status = o.status.toLowerCase();
 
-            if (status.equals("baru")) {
+            if (status.equals("baru") || status.equals("menunggu")) {
                 holder.tvStatus.setText("Pesanan Baru");
                 holder.tvStatus.setBackgroundResource(R.drawable.bg_chip_outline_orange);
                 holder.tvStatus.setTextColor(0xFFEA580C);
@@ -349,11 +372,16 @@ public class TenantOrdersFragment extends Fragment {
                 holder.btnOrderAction.setBackgroundResource(R.drawable.bg_rounded_green);
                 holder.btnOrderAction.setOnClickListener(v -> listener.onStatusUpdate(o.id, "Selesai"));
 
-            } else {
+            } else if (status.equals("selesai")) {
                 holder.tvStatus.setText("Selesai");
                 holder.tvStatus.setBackgroundResource(R.drawable.bg_chip_green);
                 holder.tvStatus.setTextColor(0xFF059669);
-
+                holder.btnOrderAction.setVisibility(View.GONE);
+            } else {
+                // Unknown status
+                holder.tvStatus.setText(o.status.toUpperCase());
+                holder.tvStatus.setBackgroundResource(R.drawable.bg_chip_muted);
+                holder.tvStatus.setTextColor(0xFF6B7280);
                 holder.btnOrderAction.setVisibility(View.GONE);
             }
         }

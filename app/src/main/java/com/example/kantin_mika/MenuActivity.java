@@ -33,7 +33,7 @@ public class MenuActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
     private int idTenant;
     private String namaTenant, usernameTenant;
-    private String URL_GET_MENUS = "http://192.168.101.4/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_GET_MENUS = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,7 +125,8 @@ public class MenuActivity extends AppCompatActivity {
                         obj.getInt("id_tenant"),
                         obj.getString("nama_menu"),
                         obj.getInt("harga"),
-                        status
+                        status,
+                        obj.optString("deskripsi", "")
                 ));
             }
             runOnUiThread(() -> {
@@ -183,6 +184,7 @@ public class MenuActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Menu menu = menus.get(position);
             holder.tvFoodName.setText(menu.getNama());
+            holder.tvFoodDesc.setText(menu.getDeskripsi());
             NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
             holder.tvFoodPrice.setText(formatter.format(menu.getHarga()));
             

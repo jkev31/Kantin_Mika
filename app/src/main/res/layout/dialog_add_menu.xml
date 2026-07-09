@@ -72,29 +72,6 @@
                 android:textColor="#111827"
                 android:textSize="14sp" />
 
-            <!-- Deskripsi -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DESKRIPSI"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/etMenuDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_rounded_muted"
-                android:gravity="top"
-                android:hint="cth: Nasi goreng dengan telur, ayam &amp; sayuran segar"
-                android:lines="3"
-                android:padding="12dp"
-                android:textColor="#111827"
-                android:textSize="14sp" />
-
             <!-- Harga -->
             <TextView
                 android:layout_width="wrap_content"
@@ -109,13 +86,36 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
                 android:background="@drawable/bg_rounded_muted"
                 android:hint="cth: 15000"
                 android:inputType="number"
                 android:padding="12dp"
                 android:textColor="#111827"
                 android:textSize="14sp" />
+
+            <!-- Deskripsi -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DESKRIPSI (OPSIONAL)"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etMenuDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_rounded_muted"
+                android:hint="cth: Nasi dengan ayam suwir dan telur"
+                android:padding="12dp"
+                android:textColor="#111827"
+                android:textSize="14sp"
+                android:gravity="top"
+                android:minLines="3" />
 
         </LinearLayout>
     </ScrollView>

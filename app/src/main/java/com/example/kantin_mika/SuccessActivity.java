@@ -24,7 +24,7 @@ import java.util.Locale;
 
 public class SuccessActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
-    private String URL_CREATE_ORDER = "http://192.168.101.4/pmob/api_uas/create_order.php";
+    private String URL_CREATE_ORDER = "http://192.168.1.5/pmob/api_uas/create_order.php";
     private TextView tvOrderId, tvTableNum, tvTotal;
     private LinearLayout llItems;
 
@@ -56,7 +56,14 @@ public class SuccessActivity extends AppCompatActivity {
         Thread thread = new Thread(() -> {
             try {
                 SharedPreferences pref = getSharedPreferences("KantinPref", MODE_PRIVATE);
-                String tableNum = pref.getString("nomor_meja", "0");
+                String rawTableNum = pref.getString("nomor_meja", "0");
+                String normalizedTableNum;
+                try {
+                    normalizedTableNum = String.valueOf(Integer.parseInt(rawTableNum.replaceAll("[^0-9]", "")));
+                } catch (Exception e) {
+                    normalizedTableNum = rawTableNum;
+                }
+                final String tableNum = normalizedTableNum;
                 String orderId = "ORD-" + System.currentTimeMillis();
 
                 SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -83,7 +90,7 @@ public class SuccessActivity extends AppCompatActivity {
                         int harga = cursor.getInt(5);
                         int qty = cursor.getInt(6);
                         
-                        dbHelper.saveOrder(orderId, idTenant, name, tenantName, harga, qty);
+                        dbHelper.saveOrder(orderId, idTenant, name, tenantName, harga, qty, "Menunggu");
 
                         JSONObject item = new JSONObject();
                         item.put("id_menu", idMenu);

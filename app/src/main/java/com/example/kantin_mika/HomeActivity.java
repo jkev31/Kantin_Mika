@@ -29,7 +29,7 @@ public class HomeActivity extends AppCompatActivity {
     private View bottomCartContainer;
     private CartDBHelper dbHelper;
     private List<Tenant> listTenants = new ArrayList<>();
-    private String URL_GET_TENANTS = "http://192.168.101.4/pmob/api_uas/get_tenants.php";
+    private String URL_GET_TENANTS = "http://192.168.1.5/pmob/api_uas/get_tenants.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,12 +105,39 @@ public class HomeActivity extends AppCompatActivity {
 
         View btnActiveOrder = findViewById(R.id.btnActiveOrder);
         if (activeOrderId != null && activeOrderTable != null && activeOrderTable.equals(currentTable)) {
-            btnActiveOrder.setVisibility(View.VISIBLE);
-            TextView tvActiveOrderInfo = findViewById(R.id.tvActiveOrderInfo);
-            tvActiveOrderInfo.setText(activeOrderId + " · Meja " + activeOrderTable);
-            btnActiveOrder.setOnClickListener(v -> {
-                startActivity(new Intent(HomeActivity.this, OrderStatusActivity.class));
-            });
+            // Check real status from server
+            new Thread(() -> {
+                try {
+                    URL url = new URL("http://192.168.1.5/pmob/api_uas/get_order_status.php?id_order=" + activeOrderId);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    InputStream is = conn.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) sb.append(line);
+                    
+                    JSONObject res = new JSONObject(sb.toString());
+                    String status = res.optString("status_pesanan", "");
+                    
+                    runOnUiThread(() -> {
+                        if ("Selesai".equalsIgnoreCase(status)) {
+                            // Order is done, hide and clear
+                            pref.edit().remove("active_order_id").remove("active_order_table").apply();
+                            btnActiveOrder.setVisibility(View.GONE);
+                        } else {
+                            btnActiveOrder.setVisibility(View.VISIBLE);
+                            TextView tvActiveOrderInfo = findViewById(R.id.tvActiveOrderInfo);
+                            tvActiveOrderInfo.setText(activeOrderId + " · Meja " + activeOrderTable);
+                            btnActiveOrder.setOnClickListener(v -> {
+                                startActivity(new Intent(HomeActivity.this, OrderStatusActivity.class));
+                            });
+                        }
+                    });
+                } catch (Exception e) {
+                    // Fallback to showing it if network fails, or just keep current state
+                    runOnUiThread(() -> btnActiveOrder.setVisibility(View.VISIBLE));
+                }
+            }).start();
         } else {
             btnActiveOrder.setVisibility(View.GONE);
         }

@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class CartDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "kantin_mika.db";
-    public static final int DATABASE_VERSION = 3; // Incremented version
+    public static final int DATABASE_VERSION = 4; // Incremented version
 
     public static final String TABLE_CART = "cart";
     public static final String COLUMN_ID_MENU = "id_menu";
@@ -21,6 +21,7 @@ public class CartDBHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_ORDERS = "orders";
     public static final String COLUMN_ORDER_ID = "order_id";
+    public static final String COLUMN_STATUS = "status";
     // Reuse other columns for order items
 
     public CartDBHelper(Context context) {
@@ -46,7 +47,8 @@ public class CartDBHelper extends SQLiteOpenHelper {
                 + COLUMN_NAMA_MENU + " TEXT,"
                 + COLUMN_NAMA_TENANT + " TEXT,"
                 + COLUMN_HARGA + " INTEGER,"
-                + COLUMN_QTY + " INTEGER" + ")";
+                + COLUMN_QTY + " INTEGER,"
+                + COLUMN_STATUS + " TEXT" + ")";
         db.execSQL(CREATE_ORDERS_TABLE);
     }
 
@@ -81,7 +83,7 @@ public class CartDBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void saveOrder(String orderId, int idTenant, String namaMenu, String namaTenant, int harga, int qty) {
+    public void saveOrder(String orderId, int idTenant, String namaMenu, String namaTenant, int harga, int qty, String status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_ORDER_ID, orderId);
@@ -90,6 +92,7 @@ public class CartDBHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NAMA_TENANT, namaTenant);
         values.put(COLUMN_HARGA, harga);
         values.put(COLUMN_QTY, qty);
+        values.put(COLUMN_STATUS, status);
         db.insert(TABLE_ORDERS, null, values);
     }
 

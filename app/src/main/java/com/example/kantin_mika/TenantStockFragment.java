@@ -31,8 +31,8 @@ public class TenantStockFragment extends Fragment {
     private TextView tvStockSummary;
     private View btnAddMenu;
     private List<Menu> stockItems = new ArrayList<>();
-    private String URL_BASE = "http://192.168.101.4/pmob/api_uas/get_menus.php?id_tenant=";
-    private String URL_ADD_MENU = "http://192.168.101.4/pmob/api_uas/add_menu.php";
+    private String URL_BASE = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_ADD_MENU = "http://192.168.1.5/pmob/api_uas/add_menu.php";
 
     @Nullable
     @Override
@@ -163,7 +163,8 @@ public class TenantStockFragment extends Fragment {
                             obj.optInt("id_tenant", 0),
                             obj.optString("nama_menu", "Menu"),
                             obj.optInt("harga", 0),
-                            status
+                            status,
+                            obj.optString("deskripsi", "")
                     ));
                 }
                 
@@ -185,7 +186,7 @@ public class TenantStockFragment extends Fragment {
         new Thread(() -> {
             try {
                 // Assuming an update_stock.php exists
-                URL url = new URL("http://192.168.101.4/pmob/api_uas/update_stock.php");
+                URL url = new URL("http://192.168.1.5/pmob/api_uas/update_stock.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
