@@ -116,9 +116,12 @@
             android:orientation="horizontal">
 
             <TextView
+                android:id="@+id/chipSemua"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_chip_primary"
+                android:clickable="true"
+                android:focusable="true"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
                 android:text="Semua"
@@ -127,10 +130,13 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/chipBaru"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_chip_muted"
+                android:clickable="true"
+                android:focusable="true"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
                 android:text="Baru"
@@ -138,10 +144,13 @@
                 android:textSize="12sp" />
 
             <TextView
+                android:id="@+id/chipDiproses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_chip_muted"
+                android:clickable="true"
+                android:focusable="true"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
                 android:text="Diproses"
@@ -149,10 +158,13 @@
                 android:textSize="12sp" />
 
             <TextView
+                android:id="@+id/chipSelesai"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_chip_muted"
+                android:clickable="true"
+                android:focusable="true"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
                 android:text="Selesai"

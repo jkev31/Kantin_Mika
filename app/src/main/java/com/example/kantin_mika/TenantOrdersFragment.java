@@ -27,37 +27,92 @@ import java.util.Locale;
 public class TenantOrdersFragment extends Fragment {
     private RecyclerView rvOrders;
     private TextView tvCountBaru, tvCountDiproses, tvCountSelesai;
+    private TextView chipSemua, chipBaru, chipDiproses, chipSelesai;
+    private OrderAdapter adapter;
+
+    private String currentFilter = "semua";
     private List<Order> orderList = new ArrayList<>();
     // Sesuaikan URL ini dengan API kamu
-    private String URL_GET_ORDERS = "http://192.168.1.5/pmob/api_uas/get_tenant_orders.php?id_tenant=";
+    private String URL_GET_ORDERS = "http://192.168.101.4/pmob/api_uas/get_tenant_orders.php?id_tenant=";
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tenant_orders, container, false);
-        
+
         rvOrders = view.findViewById(R.id.rvTenantOrders);
         rvOrders.setLayoutManager(new LinearLayoutManager(getContext()));
-        
+
         tvCountBaru = view.findViewById(R.id.tvCountBaru);
         tvCountDiproses = view.findViewById(R.id.tvCountDiproses);
         tvCountSelesai = view.findViewById(R.id.tvCountSelesai);
 
+        chipSemua = view.findViewById(R.id.chipSemua);
+        chipBaru = view.findViewById(R.id.chipBaru);
+        chipDiproses = view.findViewById(R.id.chipDiproses);
+        chipSelesai = view.findViewById(R.id.chipSelesai);
+
+        chipSemua.setOnClickListener(v -> applyFilter("semua"));
+        chipBaru.setOnClickListener(v -> applyFilter("baru"));
+        chipDiproses.setOnClickListener(v -> applyFilter("diproses"));
+        chipSelesai.setOnClickListener(v -> applyFilter("selesai"));
+
+        adapter = new OrderAdapter(new ArrayList<>());
+        rvOrders.setAdapter(adapter);
+
         loadOrders();
-        
+
         return view;
+    }
+
+    private void applyFilter(String filter) {
+        currentFilter = filter;
+
+        chipSemua.setBackgroundResource(R.drawable.bg_chip_muted);
+        chipBaru.setBackgroundResource(R.drawable.bg_chip_muted);
+        chipDiproses.setBackgroundResource(R.drawable.bg_chip_muted);
+        chipSelesai.setBackgroundResource(R.drawable.bg_chip_muted);
+        chipSemua.setTextColor(0xFF6B7280);
+        chipBaru.setTextColor(0xFF6B7280);
+        chipDiproses.setTextColor(0xFF6B7280);
+        chipSelesai.setTextColor(0xFF6B7280);
+
+        TextView activeChip = chipSemua;
+        if (filter.equals("baru")) activeChip = chipBaru;
+        else if (filter.equals("diproses")) activeChip = chipDiproses;
+        else if (filter.equals("selesai")) activeChip = chipSelesai;
+
+        activeChip.setBackgroundResource(R.drawable.bg_chip_primary);
+        activeChip.setTextColor(0xFFFFFFFF);
+
+        renderFilteredList();
+    }
+
+    private void renderFilteredList() {
+        List<Order> filtered = new ArrayList<>();
+        for (Order o : orderList) {
+            if (currentFilter.equals("semua")) {
+                filtered.add(o);
+            } else if (currentFilter.equals("diproses")
+                    && ("diproses".equalsIgnoreCase(o.status) || "proses".equalsIgnoreCase(o.status))) {
+                filtered.add(o);
+            } else if (currentFilter.equals(o.status.toLowerCase())) {
+                filtered.add(o);
+            }
+        }
+        adapter.updateData(filtered);
     }
 
     private void loadOrders() {
         if (getActivity() == null) return;
         int idTenant = getActivity().getSharedPreferences("TenantPref", Context.MODE_PRIVATE).getInt("id_tenant", 1);
-        
+
         new Thread(() -> {
             try {
                 URL url = new URL(URL_GET_ORDERS + idTenant);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                
+
                 InputStream is = conn.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
                 StringBuilder sb = new StringBuilder();
@@ -65,29 +120,41 @@ public class TenantOrdersFragment extends Fragment {
                 while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
 
-                JSONArray arr = new JSONArray(sb.toString());
+                String responseStr = sb.toString();
+                JSONArray arr;
+                if (responseStr.trim().startsWith("{")) {
+                    JSONObject root = new JSONObject(responseStr);
+                    arr = root.optJSONArray("data");
+                } else {
+                    arr = new JSONArray(responseStr);
+                }
+
+                if (arr == null) arr = new JSONArray();
+
                 orderList.clear();
                 int baru = 0, proses = 0, selesai = 0;
 
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject obj = arr.getJSONObject(i);
                     Order order = new Order(
-                        obj.getString("id_order"),
-                        obj.getString("nomor_meja"),
-                        obj.getInt("total_bayar"),
-                        obj.getString("status_pesanan"),
-                        obj.optString("waktu_order", "12.00")
+                            obj.optString("id_order", "N/A"),
+                            obj.optString("nomor_meja", "-"),
+                            obj.optInt("total_bayar", 0),
+                            obj.optString("status_pesanan", obj.optString("status", "baru")),
+                            obj.optString("waktu_order", "12.00")
                     );
-                    
+
                     if (obj.has("items")) {
-                        JSONArray itemsArr = obj.getJSONArray("items");
-                        for(int j=0; j<itemsArr.length(); j++) {
-                            JSONObject itemObj = itemsArr.getJSONObject(j);
-                            order.addItem(itemObj.getString("nama_menu"), itemObj.getInt("qty"));
+                        JSONArray itemsArr = obj.optJSONArray("items");
+                        if (itemsArr != null) {
+                            for(int j=0; j<itemsArr.length(); j++) {
+                                JSONObject itemObj = itemsArr.getJSONObject(j);
+                                order.addItem(itemObj.optString("nama_menu", "Menu"), itemObj.optInt("qty", 0));
+                            }
                         }
                     }
                     orderList.add(order);
-                    
+
                     if ("baru".equalsIgnoreCase(order.status)) baru++;
                     else if ("diproses".equalsIgnoreCase(order.status) || "proses".equalsIgnoreCase(order.status)) proses++;
                     else selesai++;
@@ -99,7 +166,7 @@ public class TenantOrdersFragment extends Fragment {
                         tvCountBaru.setText(String.valueOf(fBaru));
                         tvCountDiproses.setText(String.valueOf(fProses));
                         tvCountSelesai.setText(String.valueOf(fSelesai));
-                        rvOrders.setAdapter(new OrderAdapter(orderList));
+                        renderFilteredList();
                     });
                 }
             } catch (Exception e) {
@@ -136,7 +203,7 @@ public class TenantOrdersFragment extends Fragment {
             holder.tvId.setText(o.id);
             holder.tvMeja.setText("Meja " + o.meja);
             holder.tvWaktu.setText(o.waktu);
-            
+
             NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
             holder.tvTotal.setText(nf.format(o.total));
             holder.tvStatus.setText(o.status.toUpperCase());
@@ -153,6 +220,12 @@ public class TenantOrdersFragment extends Fragment {
 
         @Override
         public int getItemCount() { return items.size(); }
+
+        public void updateData(List<Order> newItems) {
+            items.clear();
+            items.addAll(newItems);
+            notifyDataSetChanged();
+        }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvId, tvMeja, tvWaktu, tvTotal, tvStatus;

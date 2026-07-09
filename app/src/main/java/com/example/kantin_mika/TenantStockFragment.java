@@ -27,7 +27,7 @@ import java.util.List;
 public class TenantStockFragment extends Fragment {
     private RecyclerView rvStock;
     private List<Menu> stockItems = new ArrayList<>();
-    private String URL_BASE = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_BASE = "http://192.168.101.4/pmob/api_uas/get_menus.php?id_tenant=";
 
     @Nullable
     @Override
@@ -53,7 +53,17 @@ public class TenantStockFragment extends Fragment {
                 while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
                 
-                JSONArray arr = new JSONArray(sb.toString());
+                String responseStr = sb.toString();
+                JSONArray arr;
+                if (responseStr.trim().startsWith("{")) {
+                    JSONObject root = new JSONObject(responseStr);
+                    arr = root.optJSONArray("data");
+                } else {
+                    arr = new JSONArray(responseStr);
+                }
+
+                if (arr == null) arr = new JSONArray();
+
                 stockItems.clear();
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject obj = arr.getJSONObject(i);
@@ -62,7 +72,7 @@ public class TenantStockFragment extends Fragment {
                             obj.getInt("id_tenant"),
                             obj.getString("nama_menu"),
                             obj.getInt("harga"),
-                            obj.getString("status_stok")
+                            obj.optString("status_stok", "tersedia")
                     ));
                 }
                 
@@ -82,7 +92,7 @@ public class TenantStockFragment extends Fragment {
         new Thread(() -> {
             try {
                 // Assuming an update_stock.php exists
-                URL url = new URL("http://192.168.1.5/pmob/api_uas/update_stock.php");
+                URL url = new URL("http://192.168.101.4/pmob/api_uas/update_stock.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);

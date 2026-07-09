@@ -24,7 +24,7 @@ import java.util.Locale;
 
 public class SuccessActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
-    private String URL_CREATE_ORDER = "http://192.168.1.5/pmob/api_uas/create_order.php";
+    private String URL_CREATE_ORDER = "http://192.168.101.4/pmob/api_uas/create_order.php";
     private TextView tvOrderId, tvTableNum, tvTotal;
     private LinearLayout llItems;
 
@@ -87,6 +87,7 @@ public class SuccessActivity extends AppCompatActivity {
 
                         JSONObject item = new JSONObject();
                         item.put("id_menu", idMenu);
+                        item.put("id_tenant", idTenant);
                         item.put("qty", qty);
                         item.put("harga_satuan", harga);
                         itemsArr.put(item);

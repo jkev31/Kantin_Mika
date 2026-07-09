@@ -19,7 +19,7 @@ import java.net.URLEncoder;
 
 public class TenantLoginActivity extends AppCompatActivity {
     private boolean isPasswordVisible = false;
-    private String URL_LOGIN = "http://192.168.1.5/pmob/api_uas/login_tenant.php";
+    private String URL_LOGIN = "http://192.168.101.4/pmob/api_uas/login_tenant.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

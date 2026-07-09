@@ -29,7 +29,7 @@ public class HomeActivity extends AppCompatActivity {
     private View bottomCartContainer;
     private CartDBHelper dbHelper;
     private List<Tenant> listTenants = new ArrayList<>();
-    private String URL_GET_TENANTS = "http://192.168.1.5/pmob/api_uas/get_tenants.php";
+    private String URL_GET_TENANTS = "http://192.168.101.4/pmob/api_uas/get_tenants.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
