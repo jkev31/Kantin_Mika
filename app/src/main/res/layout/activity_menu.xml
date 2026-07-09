@@ -138,53 +138,11 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <!-- Rating -->
-                        <ImageView
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:src="@drawable/ic_star"
-                            app:tint="#FBBF24" />
-
-                        <TextView
-                            android:id="@+id/tvRating"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="4.8"
-                            android:textColor="#D1D5DB"
-                            android:textSize="12sp" />
-
-                        <!-- Dot Separator -->
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="6dp"
-                            android:text="•"
-                            android:textColor="#9CA3AF"
-                            android:textSize="12sp" />
-
-                        <!-- Time -->
-                        <ImageView
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:src="@drawable/ic_clock"
-                            app:tint="#D1D5DB" />
-
-                        <TextView
-                            android:id="@+id/tvTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="10–15 mnt"
-                            android:textColor="#D1D5DB"
-                            android:textSize="12sp" />
-
                         <!-- Status Badge -->
                         <TextView
                             android:id="@+id/tvStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip_green"
                             android:paddingHorizontal="8dp"
                             android:paddingVertical="2dp"

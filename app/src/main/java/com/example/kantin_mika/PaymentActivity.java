@@ -42,8 +42,17 @@ public class PaymentActivity extends AppCompatActivity {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         findViewById(R.id.btnConfirmPay).setOnClickListener(v -> {
-            startActivity(new Intent(PaymentActivity.this, SuccessActivity.class));
-            finish();
+            int currentIndex = tenantIds.indexOf(selectedTenantId);
+            if (currentIndex < tenantIds.size() - 1) {
+                // Move to next tenant
+                selectedTenantId = tenantIds.get(currentIndex + 1);
+                createTabs();
+                updateContent();
+            } else {
+                // Last tenant confirmed
+                startActivity(new Intent(PaymentActivity.this, SuccessActivity.class));
+                finish();
+            }
         });
 
         loadData();

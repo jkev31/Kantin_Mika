@@ -23,6 +23,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import android.graphics.Paint;
 
 public class MenuActivity extends AppCompatActivity {
     private RecyclerView rvMenuItems;
@@ -32,7 +33,7 @@ public class MenuActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
     private int idTenant;
     private String namaTenant, usernameTenant;
-    private String URL_GET_MENUS = "http://192.168.101.4/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_GET_MENUS = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,16 +100,33 @@ public class MenuActivity extends AppCompatActivity {
 
     private void parseJSON(String data) {
         try {
-            JSONArray jsonArray = new JSONArray(data);
+            JSONArray arr;
+            String trimmedData = data.trim();
+            if (trimmedData.startsWith("{")) {
+                JSONObject root = new JSONObject(trimmedData);
+                arr = root.optJSONArray("data");
+            } else {
+                arr = new JSONArray(trimmedData);
+            }
+
+            if (arr == null) arr = new JSONArray();
+
             listMenus.clear();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject obj = jsonArray.getJSONObject(i);
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject obj = arr.getJSONObject(i);
+                String status = obj.optString("status_stok", obj.optString("status", "tersedia")).trim();
+                
+                // Normalisasi status
+                if (status.equals("1")) status = "tersedia";
+                else if (status.equals("0")) status = "habis";
+
                 listMenus.add(new Menu(
                         obj.getInt("id_menu"),
                         obj.getInt("id_tenant"),
                         obj.getString("nama_menu"),
                         obj.getInt("harga"),
-                        obj.getString("status_stok")
+                        status,
+                        obj.optString("deskripsi", "")
                 ));
             }
             runOnUiThread(() -> {
@@ -166,16 +184,44 @@ public class MenuActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Menu menu = menus.get(position);
             holder.tvFoodName.setText(menu.getNama());
+            holder.tvFoodDesc.setText(menu.getDeskripsi());
             NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
             holder.tvFoodPrice.setText(formatter.format(menu.getHarga()));
             
-            if ("habis".equals(menu.getStatusStok())) {
+            boolean isHabis = "habis".equalsIgnoreCase(menu.getStatusStok());
+            
+            if (isHabis) {
                 holder.rlOutOfStockOverlay.setVisibility(View.VISIBLE);
                 holder.containerQuantity.setVisibility(View.GONE);
+                
+                // Efek Habis: Abu-abu + Strikethrough
+                int colorGray = 0xFF9CA3AF;
+                holder.tvFoodName.setTextColor(colorGray);
+                holder.tvFoodName.setPaintFlags(holder.tvFoodName.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                
+                holder.tvFoodPrice.setTextColor(colorGray);
+                holder.tvFoodPrice.setPaintFlags(holder.tvFoodPrice.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                
+                holder.tvFoodDesc.setTextColor(colorGray);
+                holder.tvFoodDesc.setPaintFlags(holder.tvFoodDesc.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                
+                holder.itemView.setAlpha(0.6f);
+                holder.itemView.setOnClickListener(null);
             } else {
                 holder.rlOutOfStockOverlay.setVisibility(View.GONE);
                 holder.containerQuantity.setVisibility(View.VISIBLE);
                 
+                // Efek Normal: Hitam/Oranye + Tanpa Strikethrough
+                holder.tvFoodName.setTextColor(0xFF111827);
+                holder.tvFoodName.setPaintFlags(holder.tvFoodName.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+                
+                holder.tvFoodPrice.setTextColor(0xFFF97316); // @color/primary
+                holder.tvFoodPrice.setPaintFlags(holder.tvFoodPrice.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+                
+                holder.tvFoodDesc.setTextColor(0xFF9CA3AF); // default gray secondary
+                holder.tvFoodDesc.setPaintFlags(holder.tvFoodDesc.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+                
+                holder.itemView.setAlpha(1.0f);
                 updateQuantityUI(holder, menu);
             }
         }
@@ -228,12 +274,13 @@ public class MenuActivity extends AppCompatActivity {
         }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvFoodName, tvFoodPrice, tvQuantity;
+            TextView tvFoodName, tvFoodPrice, tvFoodDesc, tvQuantity;
             View rlOutOfStockOverlay, btnAdd, llQuantitySelector, btnMinus, btnPlus, containerQuantity;
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvFoodName = itemView.findViewById(R.id.tvFoodName);
                 tvFoodPrice = itemView.findViewById(R.id.tvFoodPrice);
+                tvFoodDesc = itemView.findViewById(R.id.tvFoodDesc);
                 tvQuantity = itemView.findViewById(R.id.tvQuantity);
                 rlOutOfStockOverlay = itemView.findViewById(R.id.rlOutOfStockOverlay);
                 btnAdd = itemView.findViewById(R.id.btnAdd);

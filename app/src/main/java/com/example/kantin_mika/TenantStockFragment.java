@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import android.widget.EditText;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -26,8 +28,11 @@ import java.util.List;
 
 public class TenantStockFragment extends Fragment {
     private RecyclerView rvStock;
+    private TextView tvStockSummary;
+    private View btnAddMenu;
     private List<Menu> stockItems = new ArrayList<>();
-    private String URL_BASE = "http://192.168.101.4/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_BASE = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_ADD_MENU = "http://192.168.1.5/pmob/api_uas/add_menu.php";
 
     @Nullable
     @Override
@@ -35,8 +40,92 @@ public class TenantStockFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_tenant_stock, container, false);
         rvStock = view.findViewById(R.id.rvTenantStock);
         rvStock.setLayoutManager(new LinearLayoutManager(getContext()));
+        tvStockSummary = view.findViewById(R.id.tvStockSummary);
+
+        btnAddMenu = view.findViewById(R.id.btnAddMenu);
+        btnAddMenu.setOnClickListener(v -> showAddMenuDialog());
+
         loadStock();
         return view;
+    }
+
+    private void showAddMenuDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_menu, null);
+        dialog.setContentView(dialogView);
+
+        EditText etName = dialogView.findViewById(R.id.etMenuName);
+        EditText etPrice = dialogView.findViewById(R.id.etMenuPrice);
+        View btnSave = dialogView.findViewById(R.id.btnSaveMenu);
+        View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
+
+        btnSave.setOnClickListener(v -> {
+            String name = etName.getText().toString().trim();
+            String price = etPrice.getText().toString().trim();
+
+            if (name.isEmpty() || price.isEmpty()) {
+                Toast.makeText(getContext(), "Harap isi nama dan harga", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            saveNewMenu(name, price, dialog);
+        });
+
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private void saveNewMenu(String name, String price, BottomSheetDialog dialog) {
+        int idTenant = getActivity().getSharedPreferences("TenantPref", android.content.Context.MODE_PRIVATE).getInt("id_tenant", 1);
+        new Thread(() -> {
+            try {
+                URL urlAdd = new URL(URL_ADD_MENU);
+                HttpURLConnection conn = (HttpURLConnection) urlAdd.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+
+                // Menambahkan status_stok default 'Tersedia' karena ada di tabel DB
+                String data = "id_tenant=" + idTenant +
+                        "&nama_menu=" + URLEncoder.encode(name, "UTF-8") +
+                        "&harga=" + price +
+                        "&status_stok=" + URLEncoder.encode("Tersedia", "UTF-8");
+
+                OutputStream os = conn.getOutputStream();
+                os.write(data.getBytes("UTF-8"));
+                os.flush();
+                os.close();
+
+                InputStream is = conn.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) response.append(line);
+                reader.close();
+
+                String resStr = response.toString();
+                JSONObject jsonRes = new JSONObject(resStr);
+                String status = jsonRes.optString("status");
+                String message = jsonRes.optString("message");
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if ("success".equalsIgnoreCase(status)) {
+                            Toast.makeText(getContext(), "Menu berhasil ditambahkan", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            loadStock();
+                        } else {
+                            // Tampilkan pesan error dari server agar tahu apa yang salah (misal: kolom deskripsi tidak ada)
+                            Toast.makeText(getContext(), "Gagal: " + message, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                }
+            }
+        }).start();
     }
 
     private void loadStock() {
@@ -65,19 +154,33 @@ public class TenantStockFragment extends Fragment {
                 if (arr == null) arr = new JSONArray();
 
                 stockItems.clear();
+                int tersedia = 0, habis = 0;
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject obj = arr.getJSONObject(i);
+                    // Ambil status_stok, jika tidak ada cek 'status', default 'tersedia'
+                    String status = obj.optString("status_stok", obj.optString("status", "tersedia")).trim();
+                    
+                    // Normalisasi status: jika database menyimpan 1/0, ubah ke tersedia/habis
+                    if (status.equals("1")) status = "tersedia";
+                    else if (status.equals("0")) status = "habis";
+                    
+                    if ("tersedia".equalsIgnoreCase(status)) tersedia++;
+                    else habis++;
+
                     stockItems.add(new Menu(
-                            obj.getInt("id_menu"),
-                            obj.getInt("id_tenant"),
-                            obj.getString("nama_menu"),
-                            obj.getInt("harga"),
-                            obj.optString("status_stok", "tersedia")
+                            obj.optInt("id_menu", 0),
+                            obj.optInt("id_tenant", 0),
+                            obj.optString("nama_menu", "Menu"),
+                            obj.optInt("harga", 0),
+                            status,
+                            obj.optString("deskripsi", "")
                     ));
                 }
                 
+                final int fTersedia = tersedia, fHabis = habis;
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
+                        tvStockSummary.setText(fTersedia + " tersedia · " + fHabis + " habis");
                         StockAdapter adapter = new StockAdapter(stockItems, (idMenu, isAvailable) -> {
                             updateStockStatus(idMenu, isAvailable ? "tersedia" : "habis");
                         });
@@ -92,7 +195,7 @@ public class TenantStockFragment extends Fragment {
         new Thread(() -> {
             try {
                 // Assuming an update_stock.php exists
-                URL url = new URL("http://192.168.101.4/pmob/api_uas/update_stock.php");
+                URL url = new URL("http://192.168.1.5/pmob/api_uas/update_stock.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
@@ -140,26 +243,52 @@ public class TenantStockFragment extends Fragment {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Menu item = items.get(position);
             holder.tvMenuName.setText(item.getNama());
-            holder.switchStock.setChecked("tersedia".equals(item.getStatusStok()));
+            boolean isAvailable = "tersedia".equalsIgnoreCase(item.getStatusStok());
             
-            holder.vOverlay.setVisibility("habis".equals(item.getStatusStok()) ? View.VISIBLE : View.GONE);
-            holder.tvBadge.setVisibility("habis".equals(item.getStatusStok()) ? View.VISIBLE : View.GONE);
+            holder.switchStock.setOnCheckedChangeListener(null);
+            holder.switchStock.setChecked(isAvailable);
+            updateSwitchUI(holder, isAvailable);
 
             holder.switchStock.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                updateSwitchUI(holder, isChecked);
                 listener.onChange(item.getId(), isChecked);
             });
+        }
+
+        private void updateSwitchUI(ViewHolder holder, boolean isChecked) {
+            int colorActive = 0xFF10B981; // Hijau
+            int colorInactive = 0xFF9CA3AF; // Abu-abu
+            int colorTrackActive = 0x6610B981;
+            int colorTrackInactive = 0x669CA3AF;
+
+            if (isChecked) {
+                holder.tvMenuStatus.setText("Tersedia");
+                holder.tvMenuStatus.setTextColor(colorActive);
+                holder.vOverlay.setVisibility(View.GONE);
+                holder.tvBadge.setVisibility(View.GONE);
+                holder.switchStock.setThumbTintList(android.content.res.ColorStateList.valueOf(colorActive));
+                holder.switchStock.setTrackTintList(android.content.res.ColorStateList.valueOf(colorTrackActive));
+            } else {
+                holder.tvMenuStatus.setText("Habis");
+                holder.tvMenuStatus.setTextColor(colorInactive);
+                holder.vOverlay.setVisibility(View.VISIBLE);
+                holder.tvBadge.setVisibility(View.VISIBLE);
+                holder.switchStock.setThumbTintList(android.content.res.ColorStateList.valueOf(colorInactive));
+                holder.switchStock.setTrackTintList(android.content.res.ColorStateList.valueOf(colorTrackInactive));
+            }
         }
 
         @Override
         public int getItemCount() { return items.size(); }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvMenuName, tvBadge;
+            TextView tvMenuName, tvBadge, tvMenuStatus;
             Switch switchStock;
             View vOverlay;
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvMenuName = itemView.findViewById(R.id.tvMenuName);
+                tvMenuStatus = itemView.findViewById(R.id.tvMenuStatus);
                 switchStock = itemView.findViewById(R.id.switchStock);
                 vOverlay = itemView.findViewById(R.id.vOutofStockOverlay);
                 tvBadge = itemView.findViewById(R.id.tvOutofStockBadge);

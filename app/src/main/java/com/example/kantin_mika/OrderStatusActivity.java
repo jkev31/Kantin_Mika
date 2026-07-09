@@ -8,12 +8,23 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +36,9 @@ public class OrderStatusActivity extends AppCompatActivity {
     private TextView tvOrderSubtitle, tvOrderSubtitleInfo;
     private RecyclerView rvOrderCards;
     private CartDBHelper dbHelper;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable refreshRunnable;
+    private String URL_GET_STATUS = "http://192.168.1.5/pmob/api_uas/get_order_status.php?id_order=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +59,85 @@ public class OrderStatusActivity extends AppCompatActivity {
         });
 
         loadOrderInfo();
-        loadOrderItems();
+        
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                fetchStatusFromServer();
+                handler.postDelayed(this, 5000); // Refresh every 5 seconds
+            }
+        };
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.post(refreshRunnable);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(refreshRunnable);
+    }
+
+    private void fetchStatusFromServer() {
+        SharedPreferences pref = getSharedPreferences("KantinPref", MODE_PRIVATE);
+        String activeOrderId = pref.getString("active_order_id", null);
+        if (activeOrderId == null) {
+            loadOrderItems(); // Fallback to local
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                URL url = new URL(URL_GET_STATUS + activeOrderId);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+
+                InputStream is = conn.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+
+                JSONObject res = new JSONObject(sb.toString());
+                if ("success".equals(res.optString("status"))) {
+                    JSONArray statuses = res.optJSONArray("statuses");
+                    if (statuses != null) {
+                        SQLiteDatabase db = dbHelper.getWritableDatabase();
+                        boolean allFinished = true;
+                        
+                        for (int i = 0; i < statuses.length(); i++) {
+                            JSONObject item = statuses.getJSONObject(i);
+                            int tenantId = item.getInt("id_tenant");
+                            String statusTenant = item.getString("status");
+
+                            // Update status per tenant di SQLite
+                            android.content.ContentValues values = new android.content.ContentValues();
+                            values.put("status", statusTenant);
+                            db.update("orders", values, "order_id=? AND id_tenant=?", 
+                                    new String[]{activeOrderId, String.valueOf(tenantId)});
+                                    
+                            if (!"Selesai".equalsIgnoreCase(statusTenant)) {
+                                allFinished = false;
+                            }
+                        }
+
+                        // Jika SEMUA tenant sudah selesai, baru hapus session order aktif
+                        if (allFinished && statuses.length() > 0) {
+                            pref.edit().remove("active_order_id").remove("active_order_table").apply();
+                        }
+                    }
+                    
+                    runOnUiThread(this::loadOrderItems);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(this::loadOrderItems);
+            }
+        }).start();
     }
 
     private void loadOrderInfo() {
@@ -69,7 +161,8 @@ public class OrderStatusActivity extends AppCompatActivity {
                         cursor.getString(3), // namaMenu
                         cursor.getString(4), // namaTenant
                         cursor.getInt(5), // harga
-                        cursor.getInt(6)  // qty
+                        cursor.getInt(6), // qty
+                        cursor.getString(7)  // status
                 );
                 if (!grouped.containsKey(item.idTenant)) {
                     grouped.put(item.idTenant, new ArrayList<>());
@@ -86,14 +179,15 @@ public class OrderStatusActivity extends AppCompatActivity {
 
     private static class OrderItem {
         int idTenant;
-        String namaMenu, namaTenant;
+        String namaMenu, namaTenant, status;
         int harga, qty;
-        OrderItem(int idTenant, String namaMenu, String namaTenant, int harga, int qty) {
+        OrderItem(int idTenant, String namaMenu, String namaTenant, int harga, int qty, String status) {
             this.idTenant = idTenant;
             this.namaMenu = namaMenu;
             this.namaTenant = namaTenant;
             this.harga = harga;
             this.qty = qty;
+            this.status = status;
         }
     }
 
@@ -126,6 +220,26 @@ public class OrderStatusActivity extends AppCompatActivity {
             holder.tvTableInfo.setText("Meja " + activeOrderTable);
             holder.btnAction.setVisibility(View.GONE); // User shouldn't see "Mulai Proses"
             
+            if (!items.isEmpty()) {
+                String status = items.get(0).status;
+                holder.tvStatusBadge.setText(status.toUpperCase());
+                
+                // Normalisasi status sesuai database (Menunggu, Diproses, Selesai)
+                if ("menunggu".equalsIgnoreCase(status) || "baru".equalsIgnoreCase(status)) {
+                    holder.tvStatusBadge.setText("MENUNGGU");
+                    holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_chip_outline_orange);
+                    holder.tvStatusBadge.setTextColor(0xFFEA580C);
+                } else if ("diproses".equalsIgnoreCase(status) || "proses".equalsIgnoreCase(status)) {
+                    holder.tvStatusBadge.setText("DIPROSES");
+                    holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_chip_blue);
+                    holder.tvStatusBadge.setTextColor(0xFF2563EB);
+                } else if ("selesai".equalsIgnoreCase(status)) {
+                    holder.tvStatusBadge.setText("SELESAI");
+                    holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_chip_green);
+                    holder.tvStatusBadge.setTextColor(0xFF059669);
+                }
+            }
+
             holder.llItemsContainer.removeAllViews();
             int total = 0;
             NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
@@ -146,7 +260,7 @@ public class OrderStatusActivity extends AppCompatActivity {
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             LinearLayout llItemsContainer;
-            TextView tvTotal, tvOrderId, tvTableInfo;
+            TextView tvTotal, tvOrderId, tvTableInfo, tvStatusBadge;
             View btnAction;
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -154,6 +268,7 @@ public class OrderStatusActivity extends AppCompatActivity {
                 tvTotal = itemView.findViewById(R.id.tvOrderTotal);
                 tvOrderId = itemView.findViewById(R.id.tvOrderId);
                 tvTableInfo = itemView.findViewById(R.id.tvTableInfo);
+                tvStatusBadge = itemView.findViewById(R.id.tvOrderStatusBadge);
                 btnAction = itemView.findViewById(R.id.btnOrderAction);
             }
         }

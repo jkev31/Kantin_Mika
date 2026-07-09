@@ -67,7 +67,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Nasi + ayam goreng crispy, lalapan &amp; sambal"
+                android:text="Deskripsi makanan"
                 android:textColor="#9CA3AF"
                 android:textSize="12sp"
                 android:maxLines="2"
