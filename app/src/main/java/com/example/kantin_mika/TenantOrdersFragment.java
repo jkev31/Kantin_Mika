@@ -115,11 +115,15 @@ public class TenantOrdersFragment extends Fragment {
         adapter.updateData(filtered);
     }
     private void updateOrderStatus(String idOrder, String newStatus) {
+        if (getActivity() == null) return;
+        int idTenant = getActivity().getSharedPreferences("TenantPref", Context.MODE_PRIVATE).getInt("id_tenant", 1);
+
         new Thread(() -> {
             try {
                 JSONObject payload = new JSONObject();
                 payload.put("id_order", idOrder);
                 payload.put("status_pesanan", newStatus);
+                payload.put("id_tenant", idTenant); // Tambahkan id_tenant ke payload
 
                 URL url = new URL(URL_UPDATE_STATUS);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();

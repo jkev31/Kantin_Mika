@@ -104,16 +104,31 @@ public class OrderStatusActivity extends AppCompatActivity {
 
                 JSONObject res = new JSONObject(sb.toString());
                 if ("success".equals(res.optString("status"))) {
-                    String statusPesanan = res.optString("status_pesanan", "Menunggu");
-                    
-                    // Update local DB status for all items in this order
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-                    android.content.ContentValues values = new android.content.ContentValues();
-                    values.put("status", statusPesanan);
-                    db.update("orders", values, "order_id=?", new String[]{activeOrderId});
+                    JSONArray statuses = res.optJSONArray("statuses");
+                    if (statuses != null) {
+                        SQLiteDatabase db = dbHelper.getWritableDatabase();
+                        boolean allFinished = true;
+                        
+                        for (int i = 0; i < statuses.length(); i++) {
+                            JSONObject item = statuses.getJSONObject(i);
+                            int tenantId = item.getInt("id_tenant");
+                            String statusTenant = item.getString("status");
 
-                    if ("Selesai".equalsIgnoreCase(statusPesanan)) {
-                        pref.edit().remove("active_order_id").remove("active_order_table").apply();
+                            // Update status per tenant di SQLite
+                            android.content.ContentValues values = new android.content.ContentValues();
+                            values.put("status", statusTenant);
+                            db.update("orders", values, "order_id=? AND id_tenant=?", 
+                                    new String[]{activeOrderId, String.valueOf(tenantId)});
+                                    
+                            if (!"Selesai".equalsIgnoreCase(statusTenant)) {
+                                allFinished = false;
+                            }
+                        }
+
+                        // Jika SEMUA tenant sudah selesai, baru hapus session order aktif
+                        if (allFinished && statuses.length() > 0) {
+                            pref.edit().remove("active_order_id").remove("active_order_table").apply();
+                        }
                     }
                     
                     runOnUiThread(this::loadOrderItems);
