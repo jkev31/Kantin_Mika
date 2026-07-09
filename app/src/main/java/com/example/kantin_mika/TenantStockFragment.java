@@ -56,28 +56,26 @@ public class TenantStockFragment extends Fragment {
 
         EditText etName = dialogView.findViewById(R.id.etMenuName);
         EditText etPrice = dialogView.findViewById(R.id.etMenuPrice);
-        EditText etDesc = dialogView.findViewById(R.id.etMenuDescription);
         View btnSave = dialogView.findViewById(R.id.btnSaveMenu);
         View btnClose = dialogView.findViewById(R.id.btnCloseDialog);
 
         btnSave.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             String price = etPrice.getText().toString().trim();
-            String desc = etDesc.getText().toString().trim();
 
             if (name.isEmpty() || price.isEmpty()) {
                 Toast.makeText(getContext(), "Harap isi nama dan harga", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            saveNewMenu(name, price, desc, dialog);
+            saveNewMenu(name, price, dialog);
         });
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 
-    private void saveNewMenu(String name, String price, String desc, BottomSheetDialog dialog) {
+    private void saveNewMenu(String name, String price, BottomSheetDialog dialog) {
         int idTenant = getActivity().getSharedPreferences("TenantPref", android.content.Context.MODE_PRIVATE).getInt("id_tenant", 1);
         new Thread(() -> {
             try {
@@ -86,10 +84,11 @@ public class TenantStockFragment extends Fragment {
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
 
+                // Menambahkan status_stok default 'Tersedia' karena ada di tabel DB
                 String data = "id_tenant=" + idTenant +
                         "&nama_menu=" + URLEncoder.encode(name, "UTF-8") +
                         "&harga=" + price +
-                        "&deskripsi=" + URLEncoder.encode(desc, "UTF-8");
+                        "&status_stok=" + URLEncoder.encode("Tersedia", "UTF-8");
 
                 OutputStream os = conn.getOutputStream();
                 os.write(data.getBytes("UTF-8"));
@@ -103,17 +102,27 @@ public class TenantStockFragment extends Fragment {
                 while ((line = reader.readLine()) != null) response.append(line);
                 reader.close();
 
+                String resStr = response.toString();
+                JSONObject jsonRes = new JSONObject(resStr);
+                String status = jsonRes.optString("status");
+                String message = jsonRes.optString("message");
+
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Menu berhasil ditambahkan", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                        loadStock();
+                        if ("success".equalsIgnoreCase(status)) {
+                            Toast.makeText(getContext(), "Menu berhasil ditambahkan", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            loadStock();
+                        } else {
+                            // Tampilkan pesan error dari server agar tahu apa yang salah (misal: kolom deskripsi tidak ada)
+                            Toast.makeText(getContext(), "Gagal: " + message, Toast.LENGTH_LONG).show();
+                        }
                     });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Gagal menambah menu", Toast.LENGTH_SHORT).show());
+                    getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                 }
             }
         }).start();

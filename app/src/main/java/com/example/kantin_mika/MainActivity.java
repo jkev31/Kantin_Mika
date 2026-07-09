@@ -10,6 +10,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -30,5 +32,21 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnTenant).setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, TenantLoginActivity.class));
         });
+
+        findViewById(R.id.btnAbout).setOnClickListener(v -> {
+            showAboutDialog();
+        });
+    }
+
+    private void showAboutDialog() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_about_us, null);
+        bottomSheetDialog.setContentView(dialogView);
+
+        dialogView.findViewById(R.id.btnCloseDialog).setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+        });
+
+        bottomSheetDialog.show();
     }
 }
