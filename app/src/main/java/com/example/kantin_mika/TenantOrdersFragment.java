@@ -31,15 +31,15 @@ import java.util.Locale;
 
 public class TenantOrdersFragment extends Fragment {
     private RecyclerView rvOrders;
-    private TextView tvCountBaru, tvCountDiproses, tvCountSelesai;
-    private TextView chipSemua, chipBaru, chipDiproses, chipSelesai;
+    private TextView tvCountBaru, tvCountDiproses, tvCountDiantar, tvCountSelesai;
+    private TextView chipSemua, chipBaru, chipDiproses, chipDiantar, chipSelesai;
     private OrderAdapter adapter;
 
     private String currentFilter = "semua";
     private List<Order> orderList = new ArrayList<>();
     // Sesuaikan URL ini dengan API kamu
-    private String URL_GET_ORDERS = "http://192.168.1.5/pmob/api_uas/get_tenant_orders.php?id_tenant=";
-    private String URL_UPDATE_STATUS = "http://192.168.1.5/pmob/api_uas/update_order_status.php";
+    private String URL_GET_ORDERS = "http://192.168.101.7/pmob/api_uas/get_tenant_orders.php?id_tenant=";
+    private String URL_UPDATE_STATUS = "http://192.168.101.7/pmob/api_uas/update_order_status.php";
 
     @Nullable
     @Override
@@ -51,16 +51,19 @@ public class TenantOrdersFragment extends Fragment {
 
         tvCountBaru = view.findViewById(R.id.tvCountBaru);
         tvCountDiproses = view.findViewById(R.id.tvCountDiproses);
+        tvCountDiantar = view.findViewById(R.id.tvCountDiantar);
         tvCountSelesai = view.findViewById(R.id.tvCountSelesai);
 
         chipSemua = view.findViewById(R.id.chipSemua);
         chipBaru = view.findViewById(R.id.chipBaru);
         chipDiproses = view.findViewById(R.id.chipDiproses);
+        chipDiantar = view.findViewById(R.id.chipDiantar);
         chipSelesai = view.findViewById(R.id.chipSelesai);
 
         chipSemua.setOnClickListener(v -> applyFilter("semua"));
         chipBaru.setOnClickListener(v -> applyFilter("baru"));
         chipDiproses.setOnClickListener(v -> applyFilter("diproses"));
+        chipDiantar.setOnClickListener(v -> applyFilter("diantar"));
         chipSelesai.setOnClickListener(v -> applyFilter("selesai"));
 
         adapter = new OrderAdapter(new ArrayList<>(), this::updateOrderStatus);
@@ -81,15 +84,18 @@ public class TenantOrdersFragment extends Fragment {
         chipSemua.setBackgroundResource(R.drawable.bg_chip_muted);
         chipBaru.setBackgroundResource(R.drawable.bg_chip_muted);
         chipDiproses.setBackgroundResource(R.drawable.bg_chip_muted);
+        chipDiantar.setBackgroundResource(R.drawable.bg_chip_muted);
         chipSelesai.setBackgroundResource(R.drawable.bg_chip_muted);
         chipSemua.setTextColor(0xFF6B7280);
         chipBaru.setTextColor(0xFF6B7280);
         chipDiproses.setTextColor(0xFF6B7280);
+        chipDiantar.setTextColor(0xFF6B7280);
         chipSelesai.setTextColor(0xFF6B7280);
 
         TextView activeChip = chipSemua;
         if (filter.equals("baru")) activeChip = chipBaru;
         else if (filter.equals("diproses")) activeChip = chipDiproses;
+        else if (filter.equals("diantar")) activeChip = chipDiantar;
         else if (filter.equals("selesai")) activeChip = chipSelesai;
 
         activeChip.setBackgroundResource(R.drawable.bg_chip_primary);
@@ -107,6 +113,8 @@ public class TenantOrdersFragment extends Fragment {
             } else if (currentFilter.equals("baru") && (status.equals("baru") || status.equals("menunggu"))) {
                 filtered.add(o);
             } else if (currentFilter.equals("diproses") && (status.equals("diproses") || status.equals("proses"))) {
+                filtered.add(o);
+            } else if (currentFilter.equals("diantar") && status.equals("diantar")) {
                 filtered.add(o);
             } else if (currentFilter.equals("selesai") && status.equals("selesai")) {
                 filtered.add(o);
@@ -189,7 +197,7 @@ public class TenantOrdersFragment extends Fragment {
                 if (arr == null) arr = new JSONArray();
 
                 orderList.clear();
-                int baru = 0, proses = 0, selesai = 0;
+                int baru = 0, proses = 0, diantar = 0, selesai = 0;
 
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject obj = arr.getJSONObject(i);
@@ -235,14 +243,16 @@ public class TenantOrdersFragment extends Fragment {
                     String sLow = status.toLowerCase();
                     if (sLow.equals("baru") || sLow.equals("menunggu")) baru++;
                     else if (sLow.equals("diproses") || sLow.equals("proses")) proses++;
+                    else if (sLow.equals("diantar")) diantar++;
                     else if (sLow.equals("selesai")) selesai++;
                 }
 
-                final int fBaru = baru, fProses = proses, fSelesai = selesai;
+                final int fBaru = baru, fProses = proses, fDiantar = diantar, fSelesai = selesai;
                 if (isAdded() && getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         tvCountBaru.setText(String.valueOf(fBaru));
                         tvCountDiproses.setText(String.valueOf(fProses));
+                        tvCountDiantar.setText(String.valueOf(fDiantar));
                         tvCountSelesai.setText(String.valueOf(fSelesai));
                         renderFilteredList();
                     });
@@ -372,9 +382,20 @@ public class TenantOrdersFragment extends Fragment {
                 holder.tvStatus.setTextColor(0xFF2563EB);
 
                 holder.btnOrderAction.setVisibility(View.VISIBLE);
-                holder.btnOrderAction.setText("Tandai Selesai");
-                holder.btnOrderAction.setBackgroundResource(R.drawable.bg_rounded_green);
-                holder.btnOrderAction.setOnClickListener(v -> listener.onStatusUpdate(o.id, "Selesai"));
+                holder.btnOrderAction.setText("Tandai Diantar");
+                holder.btnOrderAction.setBackgroundResource(R.drawable.bg_rounded_primary);
+                holder.btnOrderAction.setOnClickListener(v -> listener.onStatusUpdate(o.id, "Diantar"));
+
+            } else if (status.equals("diantar")) {
+                holder.tvStatus.setText("Diantar");
+                holder.tvStatus.setBackgroundResource(R.drawable.bg_chip_primary);
+                holder.tvStatus.setTextColor(0xFFFFFFFF);
+                
+                holder.btnOrderAction.setVisibility(View.VISIBLE);
+                holder.btnOrderAction.setText("Menunggu Pelanggan");
+                holder.btnOrderAction.setBackgroundResource(R.drawable.bg_rounded_muted);
+                holder.btnOrderAction.setOnClickListener(null);
+                holder.btnOrderAction.setEnabled(false);
 
             } else if (status.equals("selesai")) {
                 holder.tvStatus.setText("Selesai");

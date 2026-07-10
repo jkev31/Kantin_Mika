@@ -38,7 +38,7 @@ public class OrderStatusActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable refreshRunnable;
-    private String URL_GET_STATUS = "http://192.168.1.5/pmob/api_uas/get_order_status.php?id_order=";
+    private String URL_GET_STATUS = "http://192.168.101.7/pmob/api_uas/get_order_status.php?id_order=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,6 +140,44 @@ public class OrderStatusActivity extends AppCompatActivity {
         }).start();
     }
 
+    public void updateStatusToServer(String orderId, int idTenant, String newStatus) {
+        new Thread(() -> {
+            try {
+                JSONObject payload = new JSONObject();
+                payload.put("id_order", orderId);
+                payload.put("status_pesanan", newStatus);
+                payload.put("id_tenant", idTenant);
+
+                // Reusing URL_GET_STATUS but changing file name or using a separate URL
+                // Let's check what URL_UPDATE_STATUS is in TenantOrdersFragment
+                URL url = new URL("http://192.168.101.7/pmob/api_uas/update_order_status.php");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "application/json");
+
+                java.io.OutputStream os = conn.getOutputStream();
+                os.write(payload.toString().getBytes("UTF-8"));
+                os.flush();
+                os.close();
+
+                InputStream is = conn.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+
+                JSONObject resObj = new JSONObject(sb.toString());
+                if ("success".equals(resObj.optString("status"))) {
+                    fetchStatusFromServer();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
     private void loadOrderInfo() {
         SharedPreferences pref = getSharedPreferences("KantinPref", MODE_PRIVATE);
         String activeOrderId = pref.getString("active_order_id", "KNT-000000");
@@ -233,10 +271,24 @@ public class OrderStatusActivity extends AppCompatActivity {
                     holder.tvStatusBadge.setText("DIPROSES");
                     holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_chip_blue);
                     holder.tvStatusBadge.setTextColor(0xFF2563EB);
+                } else if ("diantar".equalsIgnoreCase(status)) {
+                    holder.tvStatusBadge.setText("DIANTAR");
+                    holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_chip_primary);
+                    holder.tvStatusBadge.setTextColor(0xFFFFFFFF);
+
+                    holder.btnAction.setVisibility(View.VISIBLE);
+                    holder.btnAction.setText("Tandai Selesai");
+                    holder.btnAction.setBackgroundResource(R.drawable.bg_rounded_green);
+                    holder.btnAction.setOnClickListener(v -> {
+                        if (holder.itemView.getContext() instanceof OrderStatusActivity) {
+                            ((OrderStatusActivity) holder.itemView.getContext()).updateStatusToServer(activeOrderId, tenantId, "Selesai");
+                        }
+                    });
                 } else if ("selesai".equalsIgnoreCase(status)) {
                     holder.tvStatusBadge.setText("SELESAI");
                     holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_chip_green);
                     holder.tvStatusBadge.setTextColor(0xFF059669);
+                    holder.btnAction.setVisibility(View.GONE);
                 }
             }
 
@@ -260,8 +312,7 @@ public class OrderStatusActivity extends AppCompatActivity {
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             LinearLayout llItemsContainer;
-            TextView tvTotal, tvOrderId, tvTableInfo, tvStatusBadge;
-            View btnAction;
+            TextView tvTotal, tvOrderId, tvTableInfo, tvStatusBadge, btnAction;
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 llItemsContainer = itemView.findViewById(R.id.llOrderItemsContainer);
