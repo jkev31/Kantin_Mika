@@ -31,8 +31,8 @@ public class TenantStockFragment extends Fragment {
     private TextView tvStockSummary;
     private View btnAddMenu;
     private List<Menu> stockItems = new ArrayList<>();
-    private String URL_BASE = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
-    private String URL_ADD_MENU = "http://192.168.1.5/pmob/api_uas/add_menu.php";
+    private String URL_BASE = "http://172.16.37.134/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_ADD_MENU = "http://172.16.37.134/pmob/api_uas/add_menu.php";
 
     @Nullable
     @Override
@@ -192,34 +192,60 @@ public class TenantStockFragment extends Fragment {
     }
 
     private void updateStockStatus(int idMenu, String status) {
+        // Normalisasi status ke "Tersedia" atau "Habis" agar sesuai database
+        final String normalizedStatus = status.equalsIgnoreCase("tersedia") ? "Tersedia" : "Habis";
+
         new Thread(() -> {
+            String responseBody = "";
             try {
-                // Assuming an update_stock.php exists
-                URL url = new URL("http://192.168.1.5/pmob/api_uas/update_stock.php");
+                URL url = new URL("http://172.16.37.134/pmob/api_uas/update_stock.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
-                
-                String data = "id_menu=" + idMenu + "&status_stok=" + URLEncoder.encode(status, "UTF-8");
+                conn.setConnectTimeout(5000);
+                conn.setRequestProperty("Content-Type", "application/json");
+
+                // Mengirim data dalam format JSON
+                JSONObject payload = new JSONObject();
+                payload.put("id_menu", idMenu);
+                payload.put("status_stok", normalizedStatus);
+
                 OutputStream os = conn.getOutputStream();
-                os.write(data.getBytes("UTF-8"));
+                os.write(payload.toString().getBytes("UTF-8"));
                 os.flush();
                 os.close();
-                
+
                 InputStream is = conn.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                StringBuilder response = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 String line;
-                while ((line = reader.readLine()) != null) response.append(line);
+                while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
+                responseBody = sb.toString();
+
+                JSONObject resObj = new JSONObject(responseBody);
+                boolean success = "success".equals(resObj.optString("status"));
 
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Stok diperbarui", Toast.LENGTH_SHORT).show();
+                        if (success) {
+                            Toast.makeText(getContext(), "Stok berhasil diubah ke " + normalizedStatus, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Gagal: " + resObj.optString("message"), Toast.LENGTH_LONG).show();
+                        }
+                        loadStock(); // Refresh daftar untuk sinkronisasi UI
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                final String errorMsg = responseBody.isEmpty() ? e.getMessage() : responseBody;
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getContext(), "Server Error: " + errorMsg, Toast.LENGTH_LONG).show();
                         loadStock();
                     });
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            }
         }).start();
     }
 

@@ -33,7 +33,7 @@ public class MenuActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
     private int idTenant;
     private String namaTenant, usernameTenant;
-    private String URL_GET_MENUS = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_GET_MENUS = "http://172.16.37.134/pmob/api_uas/get_menus.php?id_tenant=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

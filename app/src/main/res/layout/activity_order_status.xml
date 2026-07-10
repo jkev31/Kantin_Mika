@@ -16,7 +16,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="20dp"
-        android:paddingVertical="16dp">
+        android:paddingTop="40dp"
+        android:paddingBottom="16dp">
 
         <LinearLayout
             android:id="@+id/btnBack"
@@ -55,6 +56,25 @@
                 android:text="KNT-646335 · Meja 10"
                 android:textColor="#6B7280"
                 android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Refresh Button -->
+        <LinearLayout
+            android:id="@+id/btnRefresh"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_circle_dark_transparent"
+            android:backgroundTint="#1A000000"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_refresh"
+                app:tint="#111827" />
         </LinearLayout>
 
         <!-- Live Indicator (Green Dot) -->

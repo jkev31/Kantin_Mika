@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,7 +39,7 @@ public class OrderStatusActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable refreshRunnable;
-    private String URL_GET_STATUS = "http://192.168.1.5/pmob/api_uas/get_order_status.php?id_order=";
+    private String URL_GET_STATUS = "http://172.16.37.134/pmob/api_uas/get_order_status.php?id_order=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,10 @@ public class OrderStatusActivity extends AppCompatActivity {
         rvOrderCards.setLayoutManager(new LinearLayoutManager(this));
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        findViewById(R.id.btnRefresh).setOnClickListener(v -> {
+            fetchStatusFromServer();
+            Toast.makeText(this, "Memperbarui status...", Toast.LENGTH_SHORT).show();
+        });
         findViewById(R.id.btnOrderAgain).setOnClickListener(v -> {
             Intent intent = new Intent(OrderStatusActivity.this, HomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

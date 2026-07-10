@@ -38,8 +38,8 @@ public class TenantOrdersFragment extends Fragment {
     private String currentFilter = "semua";
     private List<Order> orderList = new ArrayList<>();
     // Sesuaikan URL ini dengan API kamu
-    private String URL_GET_ORDERS = "http://192.168.1.5/pmob/api_uas/get_tenant_orders.php?id_tenant=";
-    private String URL_UPDATE_STATUS = "http://192.168.1.5/pmob/api_uas/update_order_status.php";
+    private String URL_GET_ORDERS = "http://172.16.37.134/pmob/api_uas/get_tenant_orders.php?id_tenant=";
+    private String URL_UPDATE_STATUS = "http://172.16.37.134/pmob/api_uas/update_order_status.php";
 
     @Nullable
     @Override
@@ -62,6 +62,11 @@ public class TenantOrdersFragment extends Fragment {
         chipBaru.setOnClickListener(v -> applyFilter("baru"));
         chipDiproses.setOnClickListener(v -> applyFilter("diproses"));
         chipSelesai.setOnClickListener(v -> applyFilter("selesai"));
+
+        view.findViewById(R.id.btnRefreshOrders).setOnClickListener(v -> {
+            loadOrders();
+            Toast.makeText(getContext(), "Memperbarui daftar pesanan...", Toast.LENGTH_SHORT).show();
+        });
 
         adapter = new OrderAdapter(new ArrayList<>(), this::updateOrderStatus);
         rvOrders.setAdapter(adapter);
