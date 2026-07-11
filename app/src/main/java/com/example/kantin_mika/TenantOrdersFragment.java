@@ -1,6 +1,8 @@
 package com.example.kantin_mika;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 import java.io.OutputStream;
 import android.os.Bundle;
@@ -35,11 +37,14 @@ public class TenantOrdersFragment extends Fragment {
     private TextView chipSemua, chipBaru, chipDiproses, chipDiantar, chipSelesai;
     private OrderAdapter adapter;
 
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable refreshRunnable;
+
     private String currentFilter = "semua";
     private List<Order> orderList = new ArrayList<>();
     // Sesuaikan URL ini dengan API kamu
-    private String URL_GET_ORDERS = "http://192.168.101.7/pmob/api_uas/get_tenant_orders.php?id_tenant=";
-    private String URL_UPDATE_STATUS = "http://192.168.101.7/pmob/api_uas/update_order_status.php";
+    private String URL_GET_ORDERS = "http://192.168.1.5/pmob/api_uas/get_tenant_orders.php?id_tenant=";
+    private String URL_UPDATE_STATUS = "http://192.168.1.5/pmob/api_uas/update_order_status.php";
 
     @Nullable
     @Override
@@ -71,7 +76,27 @@ public class TenantOrdersFragment extends Fragment {
 
         loadOrders();
 
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                loadOrders();
+                handler.postDelayed(this, 5000); // Refresh every 5 seconds
+            }
+        };
+
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        handler.postDelayed(refreshRunnable, 5000);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        handler.removeCallbacks(refreshRunnable);
     }
 
 

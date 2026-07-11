@@ -31,8 +31,8 @@ public class TenantStockFragment extends Fragment {
     private TextView tvStockSummary;
     private View btnAddMenu;
     private List<Menu> stockItems = new ArrayList<>();
-    private String URL_BASE = "http://192.168.101.7/pmob/api_uas/get_menus.php?id_tenant=";
-    private String URL_ADD_MENU = "http://192.168.101.7/pmob/api_uas/add_menu.php";
+    private String URL_BASE = "http://192.168.1.5/pmob/api_uas/get_menus.php?id_tenant=";
+    private String URL_ADD_MENU = "http://192.168.1.5/pmob/api_uas/add_menu.php";
 
     @Nullable
     @Override
@@ -192,34 +192,60 @@ public class TenantStockFragment extends Fragment {
     }
 
     private void updateStockStatus(int idMenu, String status) {
+        // Kita kirim "Tersedia" atau "Habis" sesuai dengan format database
+        final String normalizedStatus = status.equalsIgnoreCase("tersedia") ? "Tersedia" : "Habis";
+
         new Thread(() -> {
+            String responseBody = "";
             try {
-                // Assuming an update_stock.php exists
-                URL url = new URL("http://192.168.101.7/pmob/api_uas/update_stock.php");
+                URL url = new URL("http://192.168.1.5/pmob/api_uas/update_stock.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
-                
-                String data = "id_menu=" + idMenu + "&status_stok=" + URLEncoder.encode(status, "UTF-8");
+                conn.setConnectTimeout(5000);
+
+                // Mengirim data dalam format Form-Data (umum untuk PHP $_POST)
+                String data = "id_menu=" + idMenu + "&status_stok=" + URLEncoder.encode(normalizedStatus, "UTF-8");
+
                 OutputStream os = conn.getOutputStream();
                 os.write(data.getBytes("UTF-8"));
                 os.flush();
                 os.close();
-                
+
                 InputStream is = conn.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                StringBuilder response = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 String line;
-                while ((line = reader.readLine()) != null) response.append(line);
+                while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
+                responseBody = sb.toString();
+
+                JSONObject jsonRes = new JSONObject(responseBody);
+                String apiStatus = jsonRes.optString("status");
+                String message = jsonRes.optString("message");
 
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Stok diperbarui", Toast.LENGTH_SHORT).show();
-                        loadStock();
+                        if ("success".equalsIgnoreCase(apiStatus)) {
+                            Toast.makeText(getContext(), "Berhasil diubah ke: " + normalizedStatus, Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Tampilkan pesan error dari PHP (misal: kolom tidak ditemukan)
+                            Toast.makeText(getContext(), "Gagal: " + message, Toast.LENGTH_LONG).show();
+                        }
+                        loadStock(); // Sinkronisasi ulang UI dengan Database
                     });
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+                final String errorMsg = responseBody.isEmpty() ? e.getMessage() : responseBody;
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        // Jika muncul error PHP (Fatal error), akan terlihat di Toast ini
+                        Toast.makeText(getContext(), "Error Update: " + errorMsg, Toast.LENGTH_LONG).show();
+                        loadStock(); // Kembalikan posisi switch ke status asli di database
+                    });
+                }
+            }
         }).start();
     }
 

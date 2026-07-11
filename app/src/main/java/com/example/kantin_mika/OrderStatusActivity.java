@@ -38,7 +38,7 @@ public class OrderStatusActivity extends AppCompatActivity {
     private CartDBHelper dbHelper;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable refreshRunnable;
-    private String URL_GET_STATUS = "http://192.168.101.7/pmob/api_uas/get_order_status.php?id_order=";
+    private String URL_GET_STATUS = "http://192.168.1.5/pmob/api_uas/get_order_status.php?id_order=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,7 +150,7 @@ public class OrderStatusActivity extends AppCompatActivity {
 
                 // Reusing URL_GET_STATUS but changing file name or using a separate URL
                 // Let's check what URL_UPDATE_STATUS is in TenantOrdersFragment
-                URL url = new URL("http://192.168.101.7/pmob/api_uas/update_order_status.php");
+                URL url = new URL("http://192.168.1.5/pmob/api_uas/update_order_status.php");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setDoOutput(true);

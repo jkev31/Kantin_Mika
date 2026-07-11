@@ -29,7 +29,7 @@ public class HomeActivity extends AppCompatActivity {
     private View bottomCartContainer;
     private CartDBHelper dbHelper;
     private List<Tenant> listTenants = new ArrayList<>();
-    private String URL_GET_TENANTS = "http://192.168.101.7/pmob/api_uas/get_tenants.php";
+    private String URL_GET_TENANTS = "http://192.168.1.5/pmob/api_uas/get_tenants.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +108,7 @@ public class HomeActivity extends AppCompatActivity {
             // Check real status from server
             new Thread(() -> {
                 try {
-                    URL url = new URL("http://192.168.101.7/pmob/api_uas/get_order_status.php?id_order=" + activeOrderId);
+                    URL url = new URL("http://192.168.1.5/pmob/api_uas/get_order_status.php?id_order=" + activeOrderId);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     InputStream is = conn.getInputStream();
                     BufferedReader reader = new BufferedReader(new InputStreamReader(is));
