@@ -44,20 +44,12 @@
             android:orientation="vertical">
 
             <!-- Logo -->
-            <LinearLayout
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_rounded_primary_light"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🍽️"
-                    android:textSize="32sp" />
-            </LinearLayout>
+                android:src="@drawable/ic_app_logo"
+                android:scaleType="centerInside" />
 
             <TextView
                 android:layout_width="wrap_content"
